@@ -1,14 +1,18 @@
-# shadcn/ui monorepo template
+# worklane
 
-This template is for creating a monorepo with shadcn/ui.
+worklane is ideal for a productivity-focused platform. It suits collaborative work tools or project management services.
 
-## Usage
+## Development
+
+This is a monorepo built with Next.js 16, shadcn/ui, and Turbopack.
+
+### Usage
 
 ```bash
 pnpm dlx shadcn@latest init
 ```
 
-## Adding components
+### Adding components
 
 To add components to your app, run the following command at the root of your `web` app:
 
@@ -18,11 +22,11 @@ pnpm dlx shadcn@latest add button -c apps/web
 
 This will place the ui components in the `packages/ui/src/components` directory.
 
-## Tailwind
+### Tailwind
 
 Your `tailwind.config.ts` and `globals.css` are already set up to use the components from the `ui` package.
 
-## Using components
+### Using components
 
 To use the components in your app, import them from the `ui` package.
 
