@@ -1,7 +1,1 @@
-{
-  "version": 2,
-  "buildCommand": "turbo build --filter=web",
-  "outputDirectory": ".next",
-  "installCommand": "pnpm install",
-  "framework": "nextjs"
-}
+ 

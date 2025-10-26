@@ -1,0 +1,234 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                   String               @id @default(cuid())
+  name                 String?
+  email                String               @unique
+  emailVerified        DateTime?
+  password             String?
+  image                String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  accounts             Account[]
+  sessions             Session[]
+  organizationMembers  OrganizationMember[]
+  projectMembers       ProjectMember[]
+  taskAssignments      TaskAssignment[]
+  createdTasks         Task[]               @relation("TaskCreator")
+  auditLogs            AuditLog[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Organization & Multi-tenancy
+model Organization {
+  id          String               @id @default(cuid())
+  name        String
+  slug        String               @unique
+  description String?
+  image       String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  members     OrganizationMember[]
+  projects    Project[]
+  roles       Role[]
+  auditLogs   AuditLog[]
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  roleId         String
+  joinedAt       DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           Role         @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+// Roles & Permissions
+model Role {
+  id                  String               @id @default(cuid())
+  name                String
+  description         String?
+  organizationId      String?
+  isSystem            Boolean              @default(false) // System roles can't be deleted
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  organization        Organization?        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions         RolePermission[]
+  organizationMembers OrganizationMember[]
+  projectMembers      ProjectMember[]
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+}
+
+model Permission {
+  id                      String                    @id @default(cuid())
+  name                    String                    @unique // e.g., "MANAGE_USERS", "CREATE_PROJECT"
+  description             String?
+  category                String // "ORGANIZATION", "PROJECT", "TASK"
+  createdAt               DateTime                  @default(now())
+  roles                   RolePermission[]
+  projectMemberPermissions ProjectMemberPermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+// Projects
+model Project {
+  id             String          @id @default(cuid())
+  name           String
+  description    String?
+  organizationId String
+  status         String          @default("ACTIVE") // ACTIVE, ARCHIVED, COMPLETED
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members        ProjectMember[]
+  tasks          Task[]
+
+  @@index([organizationId])
+}
+
+model ProjectMember {
+  id                    String                      @id @default(cuid())
+  userId                String
+  projectId             String
+  roleId                String
+  joinedAt              DateTime                    @default(now())
+  user                  User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project               Project                     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role                  Role                        @relation(fields: [roleId], references: [id])
+  customPermissions     ProjectMemberPermission[]
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+// Custom permissions per project member (overrides)
+model ProjectMemberPermission {
+  id              String        @id @default(cuid())
+  projectMemberId String
+  permissionId    String
+  granted         Boolean       @default(true) // true = granted, false = revoked
+  projectMember   ProjectMember @relation(fields: [projectMemberId], references: [id], onDelete: Cascade)
+  permission      Permission    @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([projectMemberId, permissionId])
+  @@index([projectMemberId])
+}
+
+// Tasks
+model Task {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  projectId   String
+  creatorId   String
+  status      String           @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
+  priority    String           @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  dueDate     DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator     User             @relation("TaskCreator", fields: [creatorId], references: [id])
+  assignees   TaskAssignment[]
+
+  @@index([projectId])
+  @@index([creatorId])
+  @@index([status])
+}
+
+model TaskAssignment {
+  id         String   @id @default(cuid())
+  taskId     String
+  userId     String
+  assignedAt DateTime @default(now())
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([taskId])
+  @@index([userId])
+}
+
+// Audit Log
+model AuditLog {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  action         String // e.g., "ROLE_CREATED", "PERMISSION_GRANTED"
+  resourceType   String // "ROLE", "PROJECT", "TASK", etc.
+  resourceId     String?
+  metadata       Json? // Additional context
+  createdAt      DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([resourceType, resourceId])
+  @@index([createdAt])
+}
