@@ -3,12 +3,13 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { updateRoleSchema } from "@/lib/users/validation";
 import { logRoleUpdated, logRoleDeleted } from "@/lib/audit/log";
-import { requireOrgPermission } from "@/lib/permissions/middleware";
+import { hasOrgPermission } from "@/lib/permissions/check";
+import { OrgPermission } from "@/lib/permissions/constants";
 
 // GET /api/roles/[roleId] - Get role details
 export async function GET(
   req: Request,
-  { params }: { params: { roleId: string } }
+  { params }: { params: Promise<{ roleId: string }> }
 ) {
   try {
     const session = await auth();
@@ -16,6 +17,7 @@ export async function GET(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { roleId } = await params;
     const { searchParams } = new URL(req.url);
     const organizationId = searchParams.get("organizationId");
 
@@ -27,10 +29,10 @@ export async function GET(
     }
 
     // Check if user has permission to manage roles in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_ROLES",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_ROLES
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -40,7 +42,7 @@ export async function GET(
     }
 
     const role = await prisma.role.findUnique({
-      where: { id: params.roleId },
+      where: { id: roleId },
       include: {
         permissions: {
           include: {
@@ -129,7 +131,7 @@ export async function GET(
 // PUT /api/roles/[roleId] - Update role
 export async function PUT(
   req: Request,
-  { params }: { params: { roleId: string } }
+  { params }: { params: Promise<{ roleId: string }> }
 ) {
   try {
     const session = await auth();
@@ -137,6 +139,7 @@ export async function PUT(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { roleId } = await params;
     const body = await req.json();
     const { name, description, permissions } = updateRoleSchema.parse(body);
 
@@ -151,10 +154,10 @@ export async function PUT(
     }
 
     // Check if user has permission to manage roles in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_ROLES",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_ROLES
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -165,7 +168,7 @@ export async function PUT(
 
     // Get current role data for audit log
     const currentRole = await prisma.role.findUnique({
-      where: { id: params.roleId },
+      where: { id: roleId },
       include: {
         permissions: {
           include: {
@@ -199,13 +202,10 @@ export async function PUT(
     if (name && name !== currentRole.name) {
       const existingRole = await prisma.role.findFirst({
         where: {
-          name: {
-            equals: name,
-            mode: "insensitive",
-          },
+          name: name,
           organizationId,
           id: {
-            not: params.roleId,
+            not: roleId,
           },
         },
       });
@@ -223,7 +223,7 @@ export async function PUT(
 
     // Update role
     const updatedRole = await prisma.role.update({
-      where: { id: params.roleId },
+      where: { id: roleId },
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
@@ -234,7 +234,7 @@ export async function PUT(
     if (permissions) {
       // Remove all current permissions
       await prisma.rolePermission.deleteMany({
-        where: { roleId: params.roleId },
+        where: { roleId: roleId },
       });
 
       // Add new permissions
@@ -246,7 +246,7 @@ export async function PUT(
         if (permission) {
           await prisma.rolePermission.create({
             data: {
-              roleId: params.roleId,
+              roleId: roleId,
               permissionId: permission.id,
             },
           });
@@ -256,7 +256,7 @@ export async function PUT(
 
     // Get updated role with permissions
     const finalRole = await prisma.role.findUnique({
-      where: { id: params.roleId },
+      where: { id: roleId },
       include: {
         permissions: {
           include: {
@@ -287,7 +287,7 @@ export async function PUT(
         organizationId,
         action: "ROLE_UPDATED",
         resourceType: "ROLE",
-        resourceId: params.roleId,
+        resourceId: roleId,
         roleName: updatedRole.name,
         changes,
       });
@@ -324,7 +324,7 @@ export async function PUT(
 // DELETE /api/roles/[roleId] - Delete custom role
 export async function DELETE(
   req: Request,
-  { params }: { params: { roleId: string } }
+  { params }: { params: Promise<{ roleId: string }> }
 ) {
   try {
     const session = await auth();
@@ -332,6 +332,7 @@ export async function DELETE(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { roleId } = await params;
     const { searchParams } = new URL(req.url);
     const organizationId = searchParams.get("organizationId");
 
@@ -343,10 +344,10 @@ export async function DELETE(
     }
 
     // Check if user has permission to manage roles in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_ROLES",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_ROLES
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -357,7 +358,7 @@ export async function DELETE(
 
     // Get role data for audit log
     const role = await prisma.role.findUnique({
-      where: { id: params.roleId },
+      where: { id: roleId },
       include: {
         _count: {
           select: {
@@ -397,7 +398,7 @@ export async function DELETE(
 
     // Delete the role
     await prisma.role.delete({
-      where: { id: params.roleId },
+      where: { id: roleId },
     });
 
     // Log the action
@@ -406,7 +407,7 @@ export async function DELETE(
       organizationId,
       action: "ROLE_DELETED",
       resourceType: "ROLE",
-      resourceId: params.roleId,
+      resourceId: roleId,
       roleName: role.name,
       memberCount: 0,
     });

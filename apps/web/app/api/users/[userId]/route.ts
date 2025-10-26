@@ -4,12 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { updateUserSchema } from "@/lib/users/validation";
 import { generateTemporaryPassword, hashPassword } from "@/lib/users/password";
 import { logUserUpdated, logMemberRemoved } from "@/lib/audit/log";
-import { requireOrgPermission } from "@/lib/permissions/middleware";
+import { hasOrgPermission } from "@/lib/permissions/check";
+import { OrgPermission } from "@/lib/permissions/constants";
 
 // GET /api/users/[userId] - Get user details
 export async function GET(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await auth();
@@ -17,6 +18,7 @@ export async function GET(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { userId } = await params;
     const { searchParams } = new URL(req.url);
     const organizationId = searchParams.get("organizationId");
 
@@ -28,10 +30,10 @@ export async function GET(
     }
 
     // Check if user has permission to manage users in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_USERS",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_USERS
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -41,7 +43,7 @@ export async function GET(
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       include: {
         organizationMembers: {
           where: { organizationId },
@@ -121,7 +123,7 @@ export async function GET(
 // PUT /api/users/[userId] - Update user
 export async function PUT(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await auth();
@@ -129,6 +131,7 @@ export async function PUT(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { userId } = await params;
     const body = await req.json();
     const { name, email, roleId } = updateUserSchema.parse(body);
 
@@ -143,10 +146,10 @@ export async function PUT(
     }
 
     // Check if user has permission to manage users in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_USERS",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_USERS
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -157,7 +160,7 @@ export async function PUT(
 
     // Get current user data for audit log
     const currentUser = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       include: {
         organizationMembers: {
           where: { organizationId },
@@ -194,7 +197,7 @@ export async function PUT(
 
     // Update user
     const updatedUser = await prisma.user.update({
-      where: { id: params.userId },
+      where: { id: userId },
       data: {
         ...(name && { name }),
         ...(email && { email }),
@@ -232,7 +235,7 @@ export async function PUT(
         organizationId,
         action: "USER_UPDATED",
         resourceType: "USER",
-        resourceId: params.userId,
+        resourceId: userId,
         changes,
       });
     }
@@ -264,7 +267,7 @@ export async function PUT(
 // DELETE /api/users/[userId] - Remove user from organization
 export async function DELETE(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await auth();
@@ -272,6 +275,7 @@ export async function DELETE(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { userId } = await params;
     const { searchParams } = new URL(req.url);
     const organizationId = searchParams.get("organizationId");
 
@@ -283,10 +287,10 @@ export async function DELETE(
     }
 
     // Check if user has permission to manage users in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_USERS",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_USERS
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -296,7 +300,7 @@ export async function DELETE(
     }
 
     // Prevent user from removing themselves
-    if (params.userId === session.user.id) {
+    if (userId === session.user.id) {
       return NextResponse.json(
         { message: "You cannot remove yourself from the organization" },
         { status: 400 }
@@ -305,7 +309,7 @@ export async function DELETE(
 
     // Get user data for audit log
     const user = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       include: {
         organizationMembers: {
           where: { organizationId },
@@ -334,7 +338,7 @@ export async function DELETE(
     // Remove user from all projects in this organization
     await prisma.projectMember.deleteMany({
       where: {
-        userId: params.userId,
+        userId: userId,
         project: {
           organizationId,
         },

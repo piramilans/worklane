@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { createUserSchema } from "@/lib/users/validation";
 import { generateTemporaryPassword, hashPassword } from "@/lib/users/password";
 import { logUserCreated } from "@/lib/audit/log";
-import { requireOrgPermission } from "@/lib/permissions/middleware";
+import { hasOrgPermission } from "@/lib/permissions/check";
+import { OrgPermission } from "@/lib/permissions/constants";
 
 // GET /api/users - List all users in organization
 export async function GET(req: Request) {
@@ -29,10 +30,10 @@ export async function GET(req: Request) {
     }
 
     // Check if user has permission to manage users in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_USERS",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_USERS
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -133,10 +134,10 @@ export async function POST(req: Request) {
       createUserSchema.parse(body);
 
     // Check if user has permission to manage users in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_USERS",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_USERS
     );
     if (!hasPermission) {
       return NextResponse.json(

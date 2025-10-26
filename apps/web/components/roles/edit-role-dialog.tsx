@@ -62,7 +62,7 @@ export function EditRoleDialog({
       if (!acc[permission.category]) {
         acc[permission.category] = [];
       }
-      acc[permission.category].push(permission);
+      acc[permission.category]!.push(permission);
       return acc;
     },
     {} as Record<string, Permission[]>

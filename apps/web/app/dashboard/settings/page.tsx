@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { hasOrgPermission } from "@/lib/permissions/check";
+import { OrgPermission } from "@/lib/permissions/constants";
 import {
   getCurrentOrganization,
   getCurrentOrganizationId,
@@ -78,9 +79,9 @@ export default async function SettingsPage() {
     hasManageRolesPermission,
     hasManageOrgPermission,
   ] = await Promise.all([
-    hasOrgPermission(session.user.id, currentOrgId, "MANAGE_USERS"),
-    hasOrgPermission(session.user.id, currentOrgId, "MANAGE_ROLES"),
-    hasOrgPermission(session.user.id, currentOrgId, "MANAGE_ORGANIZATION"),
+    hasOrgPermission(session.user.id, currentOrgId, OrgPermission.MANAGE_USERS),
+    hasOrgPermission(session.user.id, currentOrgId, OrgPermission.MANAGE_ROLES),
+    hasOrgPermission(session.user.id, currentOrgId, OrgPermission.MANAGE_ORGANIZATION),
   ]);
 
   // Get organization statistics

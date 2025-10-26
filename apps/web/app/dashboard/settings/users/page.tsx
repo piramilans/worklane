@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { hasOrgPermission } from "@/lib/permissions/check";
+import { OrgPermission } from "@/lib/permissions/constants";
 import {
   getCurrentOrganization,
   getCurrentOrganizationId,
@@ -119,7 +120,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const hasManageUsersPermission = await hasOrgPermission(
     session.user.id,
     currentOrgId,
-    "MANAGE_USERS"
+    OrgPermission.MANAGE_USERS
   );
 
   if (!hasManageUsersPermission) {

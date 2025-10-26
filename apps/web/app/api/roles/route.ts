@@ -3,7 +3,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createRoleSchema } from "@/lib/users/validation";
 import { logRoleCreated } from "@/lib/audit/log";
-import { requireOrgPermission } from "@/lib/permissions/middleware";
+import { hasOrgPermission } from "@/lib/permissions/check";
+import { OrgPermission } from "@/lib/permissions/constants";
 
 // GET /api/roles - List all roles in organization
 export async function GET(req: Request) {
@@ -24,10 +25,10 @@ export async function GET(req: Request) {
     }
 
     // Check if user has permission to manage roles in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_ROLES",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_ROLES
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -117,10 +118,10 @@ export async function POST(req: Request) {
       createRoleSchema.parse(body);
 
     // Check if user has permission to manage roles in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_ROLES",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_ROLES
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -131,13 +132,10 @@ export async function POST(req: Request) {
 
     // Check if role name already exists in this organization
     const existingRole = await prisma.role.findFirst({
-      where: {
-        name: {
-          equals: name,
-          mode: "insensitive",
+        where: {
+          name: name,
+          organizationId,
         },
-        organizationId,
-      },
     });
 
     if (existingRole) {

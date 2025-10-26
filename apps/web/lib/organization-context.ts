@@ -54,6 +54,10 @@ export function extractSubdomain(hostname: string): string | null {
   // Remove port if present
   const host = hostname.split(":")[0];
 
+  if (!host) {
+    return null;
+  }
+
   // Split by dots
   const parts = host.split(".");
 
@@ -64,7 +68,7 @@ export function extractSubdomain(hostname: string): string | null {
 
   // For production subdomains like "aaws.worklane.com"
   if (parts.length >= 3) {
-    return parts[0]; // Return the first part (subdomain)
+    return parts[0] || null; // Return the first part (subdomain)
   }
 
   return null;

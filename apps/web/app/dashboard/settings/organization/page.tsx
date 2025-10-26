@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { hasOrgPermission } from "@/lib/permissions/check";
+import { OrgPermission } from "@/lib/permissions/constants";
 import {
   Card,
   CardContent,
@@ -63,7 +64,7 @@ export default async function OrganizationPage() {
     const hasPermission = await hasOrgPermission(
       session.user.id,
       userOrg.organizationId,
-      "MANAGE_ORGANIZATION"
+      OrgPermission.MANAGE_ORGANIZATION
     );
     if (hasPermission) {
       hasManageOrgPermission = true;

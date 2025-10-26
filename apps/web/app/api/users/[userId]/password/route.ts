@@ -3,12 +3,13 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { generateTemporaryPassword, hashPassword } from "@/lib/users/password";
 import { logAuditEvent } from "@/lib/audit/log";
-import { requireOrgPermission } from "@/lib/permissions/middleware";
+import { hasOrgPermission } from "@/lib/permissions/check";
+import { OrgPermission } from "@/lib/permissions/constants";
 
 // POST /api/users/[userId]/password - Reset user password
 export async function POST(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await auth();
@@ -16,6 +17,7 @@ export async function POST(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { userId } = await params;
     const { searchParams } = new URL(req.url);
     const organizationId = searchParams.get("organizationId");
 
@@ -27,10 +29,10 @@ export async function POST(
     }
 
     // Check if user has permission to manage users in this organization
-    const hasPermission = await requireOrgPermission(
-      "MANAGE_USERS",
+    const hasPermission = await hasOrgPermission(
+      session.user.id,
       organizationId,
-      session.user.id
+      OrgPermission.MANAGE_USERS
     );
     if (!hasPermission) {
       return NextResponse.json(
@@ -41,7 +43,7 @@ export async function POST(
 
     // Get user data
     const user = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       include: {
         organizationMembers: {
           where: { organizationId },
@@ -67,7 +69,7 @@ export async function POST(
 
     // Update user password
     await prisma.user.update({
-      where: { id: params.userId },
+      where: { id: userId },
       data: { password: hashedPassword },
     });
 
@@ -77,7 +79,7 @@ export async function POST(
       organizationId,
       action: "PASSWORD_RESET",
       resourceType: "USER",
-      resourceId: params.userId,
+      resourceId: userId,
       metadata: {
         userEmail: user.email,
         userName: user.name || "Unknown",
