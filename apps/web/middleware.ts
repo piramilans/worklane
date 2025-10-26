@@ -1,39 +1,60 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if user has a session token
-  const sessionToken =
-    request.cookies.get("authjs.session-token")?.value ||
-    request.cookies.get("__Secure-authjs.session-token")?.value;
-
-  const isLoggedIn = !!sessionToken;
-
-  const isAuthPage =
-    pathname.startsWith("/login") || pathname.startsWith("/register");
-
-  const isProtectedRoute =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
-
-  if (isAuthPage) {
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+  // Skip middleware for API routes, static files, and auth routes
+  if (
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/auth/")
+  ) {
     return NextResponse.next();
   }
 
-  if (isProtectedRoute) {
-    if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/login", request.url));
+  try {
+    // Extract subdomain from hostname
+    const hostname = request.headers.get("host") || "";
+    const host = hostname.split(":")[0] || "";
+    const parts = host.split(".");
+
+    let subdomain = null;
+
+    // For localhost development, use default subdomain
+    if (host === "localhost" || host === "127.0.0.1") {
+      subdomain = "aaws"; // Default organization for localhost
+    } else if (parts.length >= 3) {
+      subdomain = parts[0]; // First part is subdomain
     }
+
+    // Add organization context to headers for server components
+    const response = NextResponse.next();
+
+    if (subdomain) {
+      response.headers.set("x-organization-subdomain", subdomain);
+      // For now, we'll let the server components handle organization resolution
+      // This avoids Prisma edge runtime issues
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Middleware error:", error);
     return NextResponse.next();
   }
-
-  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 };

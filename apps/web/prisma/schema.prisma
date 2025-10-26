@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -16,12 +16,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -68,6 +68,7 @@ model Organization {
   id          String               @id @default(cuid())
   name        String
   slug        String               @unique
+  subdomain   String               @unique @default("default") // For multi-tenant SaaS (e.g., "aaws", "apple")
   description String?
   image       String?
   createdAt   DateTime             @default(now())
