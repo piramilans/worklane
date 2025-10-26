@@ -63,6 +63,34 @@ An open-source project management tool built with Next.js 16, featuring user aut
 
 6. **Open [http://localhost:3000](http://localhost:3000)**
 
+## Vercel Deployment
+
+1. **Connect your GitHub repository to Vercel**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "New Project"
+   - Import your GitHub repository
+
+2. **Set up environment variables in Vercel**
+   - Go to Project Settings → Environment Variables
+   - Add the following variables:
+     ```
+     DATABASE_URL=postgresql://username:password@host:port/database?sslmode=require
+     AUTH_SECRET=your-auth-secret-minimum-32-characters-long
+     NEXTAUTH_URL=https://your-domain.vercel.app
+     ```
+
+3. **Deploy**
+   - Vercel will automatically build and deploy from the `main` branch
+   - The `vercel.json` configuration handles the monorepo setup
+
+4. **Set up the database**
+   - After deployment, run the database setup commands:
+   ```bash
+   pnpm db:generate
+   pnpm db:push
+   pnpm db:seed-permissions
+   ```
+
 ## Documentation
 
 - **[Setup Guide](./SETUP.md)** - Detailed setup instructions, database configuration, and deployment guides

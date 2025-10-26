@@ -1,7 +1,12 @@
 {
   "version": 2,
   "buildCommand": "turbo build --filter=web",
-  "outputDirectory": ".next",
+  "outputDirectory": "apps/web/.next",
   "installCommand": "pnpm install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "functions": {
+    "apps/web/app/api/**/*.ts": {
+      "runtime": "nodejs20.x"
+    }
+  }
 }
