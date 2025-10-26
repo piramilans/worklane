@@ -1,8 +1,14 @@
 import { auth } from "@/auth";
-import { LogoutButton } from "@/components/auth/logout-button";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@workspace/ui/components/button";
+import { AppSidebar } from "@/components/app-sidebar";
+import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { DataTable } from "@/components/data-table";
+import { SectionCards } from "@/components/section-cards";
+import { SiteHeader } from "@/components/site-header";
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "@workspace/ui/components/sidebar";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -12,48 +18,29 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Worklane</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                Welcome, {session.user?.name || session.user?.email}
-              </span>
-              <Link href="/admin">
-                <Button variant="outline" size="sm">
-                  Admin Dashboard
-                </Button>
-              </Link>
-              <LogoutButton />
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Project Management Dashboard
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Your projects and tasks will appear here
-              </p>
-              <div className="space-y-2 text-sm text-gray-500">
-                <p>• Create and manage projects</p>
-                <p>• Assign tasks to team members</p>
-                <p>• Track progress and deadlines</p>
-                <p>• Collaborate with your team</p>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              <SectionCards />
+              <div className="px-4 lg:px-6">
+                <ChartAreaInteractive />
               </div>
+              <DataTable />
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
