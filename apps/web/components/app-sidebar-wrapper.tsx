@@ -6,38 +6,48 @@ import { AppSidebar } from "./app-sidebar";
 
 export async function AppSidebarWrapper() {
   const session = await auth();
-  const organizationId = await getCurrentOrganizationId();
 
-  if (!session?.user?.id || !organizationId) {
-    return null;
+  if (!session?.user?.id) {
+    return <AppSidebar visibleSettings={[]} />;
   }
 
-  // Check permissions for each section
-  const hasManageUsers = await hasOrgPermission(
-    session.user.id,
-    organizationId,
-    OrgPermission.MANAGE_USERS
-  );
+  const organizationId = await getCurrentOrganizationId();
 
-  const hasManageRoles = await hasOrgPermission(
-    session.user.id,
-    organizationId,
-    OrgPermission.MANAGE_ROLES
-  );
+  if (!organizationId) {
+    return <AppSidebar visibleSettings={[]} />;
+  }
 
-  const hasManageOrganization = await hasOrgPermission(
-    session.user.id,
-    organizationId,
-    OrgPermission.MANAGE_ORGANIZATION
-  );
+  try {
+    // Check permissions for each section
+    const hasManageUsers = await hasOrgPermission(
+      session.user.id,
+      organizationId,
+      OrgPermission.MANAGE_USERS
+    );
 
-  return (
-    <AppSidebar
-      visibleSettings={[
-        ...(hasManageUsers ? ["users"] : []),
-        ...(hasManageRoles ? ["roles", "permissions"] : []),
-        ...(hasManageOrganization ? ["organization"] : []),
-      ]}
-    />
-  );
+    const hasManageRoles = await hasOrgPermission(
+      session.user.id,
+      organizationId,
+      OrgPermission.MANAGE_ROLES
+    );
+
+    const hasManageOrganization = await hasOrgPermission(
+      session.user.id,
+      organizationId,
+      OrgPermission.MANAGE_ORGANIZATION
+    );
+
+    return (
+      <AppSidebar
+        visibleSettings={[
+          ...(hasManageUsers ? ["users"] : []),
+          ...(hasManageRoles ? ["roles", "permissions"] : []),
+          ...(hasManageOrganization ? ["organization"] : []),
+        ]}
+      />
+    );
+  } catch (error) {
+    console.error("Error checking permissions:", error);
+    return <AppSidebar visibleSettings={[]} />;
+  }
 }
