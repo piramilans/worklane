@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -16,12 +16,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -51,6 +51,7 @@ model User {
   organizationMembers  OrganizationMember[]
   projectMembers       ProjectMember[]
   taskAssignments      TaskAssignment[]
+  taskReviews          TaskReviewer[]
   createdTasks         Task[]               @relation("TaskCreator")
   auditLogs            AuditLog[]
 }
@@ -68,6 +69,7 @@ model Organization {
   id          String               @id @default(cuid())
   name        String
   slug        String               @unique
+  subdomain   String               @unique @default("default") // For multi-tenant SaaS (e.g., "aaws", "apple")
   description String?
   image       String?
   createdAt   DateTime             @default(now())
@@ -182,19 +184,20 @@ model ProjectMemberPermission {
 
 // Tasks
 model Task {
-  id          String           @id @default(cuid())
+  id          String            @id @default(cuid())
   title       String
   description String?
   projectId   String
   creatorId   String
-  status      String           @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
-  priority    String           @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status      String            @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
+  priority    String            @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
   dueDate     DateTime?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  creator     User             @relation("TaskCreator", fields: [creatorId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator     User              @relation("TaskCreator", fields: [creatorId], references: [id])
   assignees   TaskAssignment[]
+  reviewers   TaskReviewer[]
 
   @@index([projectId])
   @@index([creatorId])
@@ -206,6 +209,19 @@ model TaskAssignment {
   taskId     String
   userId     String
   assignedAt DateTime @default(now())
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([taskId])
+  @@index([userId])
+}
+
+model TaskReviewer {
+  id         String   @id @default(cuid())
+  taskId     String
+  userId     String
+  addedAt    DateTime @default(now())
   task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
