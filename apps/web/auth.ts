@@ -35,13 +35,20 @@ const config: NextAuthConfig = {
             where: { email },
           });
 
-          if (!user || !user.password) {
+          if (!user) {
+            console.error("User not found:", email);
+            return null;
+          }
+
+          if (!user.password) {
+            console.error("User has no password:", email);
             return null;
           }
 
           const isPasswordValid = await bcrypt.compare(password, user.password);
 
           if (!isPasswordValid) {
+            console.error("Invalid password for:", email);
             return null;
           }
 
@@ -51,7 +58,8 @@ const config: NextAuthConfig = {
             name: user.name,
             image: user.image,
           };
-        } catch {
+        } catch (error) {
+          console.error("Auth error:", error);
           return null;
         }
       },

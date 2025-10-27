@@ -1,44 +1,49 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { Button } from "@workspace/ui/components/button"
-import { Input } from "@workspace/ui/components/input"
-import { Label } from "@workspace/ui/components/label"
-import Link from "next/link"
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import Link from "next/link";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
-      })
+      });
 
       if (result?.error) {
-        setError("Invalid email or password")
+        console.error("Login error:", result.error);
+        setError(
+          result.error === "CredentialsSignin"
+            ? "Invalid email or password"
+            : result.error || "Invalid email or password"
+        );
       } else {
-        router.push("/dashboard")
-        router.refresh()
+        router.push("/dashboard");
+        router.refresh();
       }
     } catch (error) {
-      setError("Something went wrong. Please try again.")
+      setError("Something went wrong. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
@@ -53,7 +58,7 @@ export function LoginForm() {
           disabled={isLoading}
         />
       </div>
-      
+
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input
@@ -83,5 +88,5 @@ export function LoginForm() {
         </Link>
       </div>
     </form>
-  )
+  );
 }
