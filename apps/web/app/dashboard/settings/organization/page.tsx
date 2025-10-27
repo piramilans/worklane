@@ -145,12 +145,12 @@ export default async function OrganizationPage() {
   const [memberCount, projectCount, roleCount] = stats;
 
   return (
-    <div className="px-4 lg:px-6 space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+    <div className="px-2 sm:px-4 lg:px-6 space-y-4 sm:space-y-8">
+      <div className="text-center px-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
           Organization Settings
         </h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-sm sm:text-base lg:text-lg text-gray-600">
           Manage your organization details and settings
         </p>
       </div>

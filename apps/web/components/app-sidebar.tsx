@@ -13,8 +13,8 @@ import {
   Shield,
   Building,
 } from "lucide-react";
+import Link from "next/link";
 
-import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -52,36 +52,32 @@ const data = {
     },
     {
       title: "Projects",
-      url: "/projects",
+      url: "/dashboard/projects",
       icon: FolderOpen,
-      items: [
-        {
-          title: "AAWS Demo Project",
-          url: "/projects/aaws-demo",
-        },
-      ],
+      items: [],
     },
     {
       title: "Tasks",
-      url: "/tasks",
+      url: "/dashboard/tasks",
       icon: FileText,
     },
-    {
-      title: "Team",
-      url: "/team",
-      icon: Users,
-    },
   ],
-  projects: [
-    {
-      name: "AAWS Demo Project",
-      url: "/projects/aaws-demo",
-      icon: FolderOpen,
-    },
-  ],
+  projects: [],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  visibleSettings?: string[];
+}
+
+export function AppSidebar({
+  visibleSettings = [],
+  ...props
+}: AppSidebarProps) {
+  const shouldShowUsers = visibleSettings.includes("users");
+  const shouldShowRoles = visibleSettings.includes("roles");
+  const shouldShowPermissions = visibleSettings.includes("permissions");
+  const shouldShowOrganization = visibleSettings.includes("organization");
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -108,65 +104,109 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarGroupLabel>Platform</SidebarGroupLabel>
           <SidebarGroupContent>
-            <NavMain items={data.navMain} />
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Projects</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <NavProjects projects={data.projects} />
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
-          <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg" asChild>
-                  <a href="/dashboard/settings/users">
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                      <Users className="size-4" />
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">Users</span>
-                      <span className="truncate text-xs">Manage users</span>
-                    </div>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg" asChild>
-                  <a href="/dashboard/settings/roles">
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                      <Shield className="size-4" />
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        Roles & Permissions
-                      </span>
-                      <span className="truncate text-xs">Manage roles</span>
-                    </div>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg" asChild>
-                  <a href="/dashboard/settings/organization">
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                      <Building className="size-4" />
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        Organization
-                      </span>
-                      <span className="truncate text-xs">Org settings</span>
-                    </div>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {data.navMain.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton size="lg" asChild>
+                    <Link href={item.url} className="flex items-center gap-2">
+                      {item.icon && <item.icon className="size-4" />}
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">
+                          {item.title}
+                        </span>
+                      </div>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {data.projects.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Projects</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <NavProjects projects={data.projects} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+        {(shouldShowUsers || shouldShowRoles || shouldShowOrganization) && (
+          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {shouldShowUsers && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" asChild>
+                      <a href="/dashboard/settings/users">
+                        <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                          <Users className="size-4" />
+                        </div>
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                          <span className="truncate font-semibold">Users</span>
+                          <span className="truncate text-xs">Manage users</span>
+                        </div>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+                {shouldShowRoles && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" asChild>
+                      <a href="/dashboard/settings/roles">
+                        <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                          <Shield className="size-4" />
+                        </div>
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                          <span className="truncate font-semibold">
+                            Roles & Permissions
+                          </span>
+                          <span className="truncate text-xs">Manage roles</span>
+                        </div>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+                {shouldShowPermissions && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" asChild>
+                      <a href="/dashboard/settings/permissions">
+                        <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                          <Shield className="size-4" />
+                        </div>
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                          <span className="truncate font-semibold">
+                            Permissions
+                          </span>
+                          <span className="truncate text-xs">
+                            View permissions
+                          </span>
+                        </div>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+                {shouldShowOrganization && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" asChild>
+                      <a href="/dashboard/settings/organization">
+                        <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                          <Building className="size-4" />
+                        </div>
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                          <span className="truncate font-semibold">
+                            Organization
+                          </span>
+                          <span className="truncate text-xs">Org settings</span>
+                        </div>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupLabel>Account</SidebarGroupLabel>
           <SidebarGroupContent>

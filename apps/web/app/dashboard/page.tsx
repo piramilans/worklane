@@ -6,7 +6,7 @@ export default async function DashboardPage() {
   return (
     <>
       <SectionCards />
-      <div className="px-4 lg:px-6">
+      <div className="px-2 sm:px-4 lg:px-6">
         <ChartAreaInteractive />
       </div>
       <DataTable />

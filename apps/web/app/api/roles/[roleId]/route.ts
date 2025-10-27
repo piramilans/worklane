@@ -391,7 +391,9 @@ export async function DELETE(
       role._count.organizationMembers + role._count.projectMembers;
     if (memberCount > 0) {
       return NextResponse.json(
-        { message: `Cannot delete role with ${memberCount} active members` },
+        {
+          message: `Cannot delete role. This role has ${memberCount} member${memberCount !== 1 ? "s" : ""} assigned. Please remove all members before deleting.`,
+        },
         { status: 400 }
       );
     }

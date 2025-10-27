@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
   Tabs,
@@ -18,7 +17,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@workspace/ui/components/tabs";
-import { Plus, Edit, Trash2, Shield, Users, Lock } from "lucide-react";
+import { Plus, Edit, Trash2, Shield, Users } from "lucide-react";
 import { CreateRoleDialog } from "@/components/roles/create-role-dialog";
 import { EditRoleDialog } from "@/components/roles/edit-role-dialog";
 import { DeleteRoleDialog } from "@/components/roles/delete-role-dialog";
@@ -116,6 +115,7 @@ export default async function RolesPage() {
     prisma.role.findMany({
       where: {
         isSystem: true,
+        name: { not: "Super Admin" }, // Hide Super Admin
       },
       include: {
         permissions: {
@@ -157,17 +157,19 @@ export default async function RolesPage() {
     }),
   ]);
 
-  const allRoles: Role[] = [...systemRoles, ...orgRoles].map((role) => ({
-    id: role.id,
-    name: role.name,
-    description: role.description,
-    isSystem: role.isSystem,
-    organizationId: role.organizationId,
-    permissions: role.permissions.map((rp) => rp.permission),
-    memberCount: role._count.organizationMembers + role._count.projectMembers,
-    createdAt: role.createdAt,
-    updatedAt: role.updatedAt,
-  }));
+  const allRoles: Role[] = [...systemRoles, ...orgRoles]
+    .filter((role) => role.name !== "Super Admin") // Hide Super Admin
+    .map((role) => ({
+      id: role.id,
+      name: role.name,
+      description: role.description,
+      isSystem: role.isSystem,
+      organizationId: role.organizationId,
+      permissions: role.permissions.map((rp) => rp.permission),
+      memberCount: role._count.organizationMembers + role._count.projectMembers,
+      createdAt: role.createdAt,
+      updatedAt: role.updatedAt,
+    }));
 
   const permissions: Permission[] = allPermissions.map((perm) => ({
     id: perm.id,
@@ -189,12 +191,12 @@ export default async function RolesPage() {
   );
 
   return (
-    <div className="px-4 lg:px-6 space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+    <div className="px-2 sm:px-4 lg:px-6 space-y-4 sm:space-y-8">
+      <div className="text-center px-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
           Roles & Permissions
         </h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-sm sm:text-base lg:text-lg text-gray-600">
           Manage roles and their permissions
         </p>
       </div>
@@ -212,76 +214,26 @@ export default async function RolesPage() {
         </div>
 
         <TabsContent value="roles" className="space-y-6">
-          {/* System Roles */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-gray-500" />
-                <CardTitle>System Roles</CardTitle>
-              </div>
-              <CardDescription>
-                Predefined roles that cannot be modified or deleted
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {systemRoles.map((role) => (
-                  <Card key={role.id}>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{role.name}</CardTitle>
-                        <Badge variant="secondary">
-                          <Lock className="h-3 w-3 mr-1" />
-                          System
-                        </Badge>
-                      </div>
-                      <CardDescription className="text-sm">
-                        {role.description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">Permissions:</span>
-                          <span className="font-medium">
-                            {role.permissions.length}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">Members:</span>
-                          <span className="font-medium">
-                            {role._count.organizationMembers +
-                              role._count.projectMembers}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Custom Roles */}
+          {/* All Roles */}
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-blue-500" />
-                <CardTitle>Custom Roles</CardTitle>
+                <CardTitle>Roles</CardTitle>
               </div>
-              <CardDescription>
-                Organization-specific roles that can be modified
-              </CardDescription>
+              <CardDescription>Manage role permissions</CardDescription>
             </CardHeader>
             <CardContent>
-              {orgRoles.length === 0 ? (
+              {[...systemRoles, ...orgRoles].filter(
+                (role) => role.name !== "Super Admin"
+              ).length === 0 ? (
                 <div className="text-center py-8">
                   <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No Custom Roles
+                    No Roles
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    Create your first custom role to get started.
+                    Create your first role to get started.
                   </p>
                   <CreateRoleDialog
                     organizationId={accessibleOrgId}
@@ -290,75 +242,80 @@ export default async function RolesPage() {
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {orgRoles.map((role) => (
-                    <Card key={role.id}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">{role.name}</CardTitle>
-                          <Badge variant="outline">Custom</Badge>
-                        </div>
-                        <CardDescription className="text-sm">
-                          {role.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Permissions:</span>
-                            <span className="font-medium">
-                              {role.permissions.length}
-                            </span>
+                  {[...systemRoles, ...orgRoles]
+                    .filter((role) => role.name !== "Super Admin")
+                    .map((role) => (
+                      <Card key={role.id}>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg">
+                              {role.name}
+                            </CardTitle>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Members:</span>
-                            <span className="font-medium">
-                              {role._count.organizationMembers +
-                                role._count.projectMembers}
-                            </span>
+                          <CardDescription className="text-sm">
+                            {role.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">
+                                Permissions:
+                              </span>
+                              <span className="font-medium">
+                                {role.permissions.length}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Members:</span>
+                              <span className="font-medium">
+                                {role._count.organizationMembers +
+                                  role._count.projectMembers}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-end gap-2 pt-2">
+                              <EditRoleDialog
+                                role={{
+                                  id: role.id,
+                                  name: role.name,
+                                  description: role.description,
+                                  isSystem: role.isSystem,
+                                  organizationId: role.organizationId,
+                                  permissions: role.permissions.map(
+                                    (rp) => rp.permission
+                                  ),
+                                  memberCount:
+                                    role._count.organizationMembers +
+                                    role._count.projectMembers,
+                                  createdAt: role.createdAt,
+                                  updatedAt: role.updatedAt,
+                                }}
+                                organizationId={accessibleOrgId}
+                                permissions={permissions}
+                              />
+                              <DeleteRoleDialog
+                                role={{
+                                  id: role.id,
+                                  name: role.name,
+                                  description: role.description,
+                                  isSystem: role.isSystem,
+                                  organizationId: role.organizationId,
+                                  permissions: role.permissions.map(
+                                    (rp) => rp.permission
+                                  ),
+                                  memberCount:
+                                    role._count.organizationMembers +
+                                    role._count.projectMembers,
+                                  createdAt: role.createdAt,
+                                  updatedAt: role.updatedAt,
+                                }}
+                                organizationId={accessibleOrgId}
+                              />
+                            </div>
                           </div>
-                          <div className="flex items-center justify-end gap-2 pt-2">
-                            <EditRoleDialog
-                              role={{
-                                id: role.id,
-                                name: role.name,
-                                description: role.description,
-                                isSystem: role.isSystem,
-                                organizationId: role.organizationId,
-                                permissions: role.permissions.map(
-                                  (rp) => rp.permission
-                                ),
-                                memberCount:
-                                  role._count.organizationMembers +
-                                  role._count.projectMembers,
-                                createdAt: role.createdAt,
-                                updatedAt: role.updatedAt,
-                              }}
-                              organizationId={accessibleOrgId}
-                              permissions={permissions}
-                            />
-                            <DeleteRoleDialog
-                              role={{
-                                id: role.id,
-                                name: role.name,
-                                description: role.description,
-                                isSystem: role.isSystem,
-                                organizationId: role.organizationId,
-                                permissions: role.permissions.map(
-                                  (rp) => rp.permission
-                                ),
-                                memberCount:
-                                  role._count.organizationMembers +
-                                  role._count.projectMembers,
-                                createdAt: role.createdAt,
-                                updatedAt: role.updatedAt,
-                              }}
-                              organizationId={accessibleOrgId}
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    ))}
                 </div>
               )}
             </CardContent>

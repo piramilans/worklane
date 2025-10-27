@@ -14,6 +14,20 @@ export enum OrgPermission {
   VIEW_AUDIT_LOG = "VIEW_AUDIT_LOG",
   INVITE_MEMBERS = "INVITE_MEMBERS",
   REMOVE_MEMBERS = "REMOVE_MEMBERS",
+  VIEW_DASHBOARD = "VIEW_DASHBOARD",
+  MANAGE_TEAM = "MANAGE_TEAM",
+  VIEW_TEAM = "VIEW_TEAM",
+  EXPORT_DATA = "EXPORT_DATA",
+  IMPORT_DATA = "IMPORT_DATA",
+  MANAGE_INTEGRATIONS = "MANAGE_INTEGRATIONS",
+  VIEW_ANALYTICS = "VIEW_ANALYTICS",
+  MANAGE_SETTINGS = "MANAGE_SETTINGS",
+  DELETE_ORGANIZATION = "DELETE_ORGANIZATION",
+  MANAGE_SUBSCRIPTIONS = "MANAGE_SUBSCRIPTIONS",
+  VIEW_BILLING = "VIEW_BILLING",
+  MANAGE_CUSTOM_FIELDS = "MANAGE_CUSTOM_FIELDS",
+  VIEW_REPORTS = "VIEW_REPORTS",
+  MANAGE_WEBHOOKS = "MANAGE_WEBHOOKS",
 }
 
 // Project Permissions
@@ -24,6 +38,15 @@ export enum ProjectPermission {
   VIEW_PROJECT = "VIEW_PROJECT",
   MANAGE_PROJECT_MEMBERS = "MANAGE_PROJECT_MEMBERS",
   ARCHIVE_PROJECT = "ARCHIVE_PROJECT",
+  EXPORT_PROJECT = "EXPORT_PROJECT",
+  IMPORT_PROJECT = "IMPORT_PROJECT",
+  MANAGE_PROJECT_SETTINGS = "MANAGE_PROJECT_SETTINGS",
+  CLONE_PROJECT = "CLONE_PROJECT",
+  VIEW_PROJECT_ANALYTICS = "VIEW_PROJECT_ANALYTICS",
+  ASSIGN_PROJECT = "ASSIGN_PROJECT",
+  MANAGE_PROJECT_ROLES = "MANAGE_PROJECT_ROLES",
+  MANAGE_PROJECT_TEMPLATES = "MANAGE_PROJECT_TEMPLATES",
+  VIEW_PROJECT_HISTORY = "VIEW_PROJECT_HISTORY",
 }
 
 // Task Permissions
@@ -36,6 +59,16 @@ export enum TaskPermission {
   CHANGE_TASK_STATUS = "CHANGE_TASK_STATUS",
   COMMENT_TASK = "COMMENT_TASK",
   EDIT_TASK_PRIORITY = "EDIT_TASK_PRIORITY",
+  MANAGE_TASK_DEPENDENCIES = "MANAGE_TASK_DEPENDENCIES",
+  ATTACH_TASK_FILES = "ATTACH_TASK_FILES",
+  EDIT_TASK_ASSIGNMENTS = "EDIT_TASK_ASSIGNMENTS",
+  VIEW_TASK_HISTORY = "VIEW_TASK_HISTORY",
+  EXPORT_TASKS = "EXPORT_TASKS",
+  BULK_EDIT_TASKS = "BULK_EDIT_TASKS",
+  DELETE_TASK_ATTACHMENTS = "DELETE_TASK_ATTACHMENTS",
+  MANAGE_TASK_TEMPLATES = "MANAGE_TASK_TEMPLATES",
+  VIEW_TASK_ANALYTICS = "VIEW_TASK_ANALYTICS",
+  MANAGE_TASK_CUSTOM_FIELDS = "MANAGE_TASK_CUSTOM_FIELDS",
 }
 
 // All Permissions
@@ -95,6 +128,76 @@ export const PERMISSION_DEFINITIONS = [
     description: "Remove members from the organization",
     category: PermissionCategory.ORGANIZATION,
   },
+  {
+    name: OrgPermission.VIEW_DASHBOARD,
+    description: "View and access the organization dashboard",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.MANAGE_TEAM,
+    description: "Manage team members and their assignments",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.VIEW_TEAM,
+    description: "View team members and their information",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.EXPORT_DATA,
+    description: "Export organization data and reports",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.IMPORT_DATA,
+    description: "Import data into the organization",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.MANAGE_INTEGRATIONS,
+    description: "Manage third-party integrations",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.VIEW_ANALYTICS,
+    description: "View organization analytics and insights",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.MANAGE_SETTINGS,
+    description: "Manage organization settings",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.DELETE_ORGANIZATION,
+    description: "Delete the organization",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.MANAGE_SUBSCRIPTIONS,
+    description: "Manage subscription and billing plans",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.VIEW_BILLING,
+    description: "View billing information and invoices",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.MANAGE_CUSTOM_FIELDS,
+    description: "Manage custom fields and metadata",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.VIEW_REPORTS,
+    description: "View and generate reports",
+    category: PermissionCategory.ORGANIZATION,
+  },
+  {
+    name: OrgPermission.MANAGE_WEBHOOKS,
+    description: "Manage webhooks and automation",
+    category: PermissionCategory.ORGANIZATION,
+  },
 
   // Project Permissions
   {
@@ -125,6 +228,51 @@ export const PERMISSION_DEFINITIONS = [
   {
     name: ProjectPermission.ARCHIVE_PROJECT,
     description: "Archive or unarchive projects",
+    category: PermissionCategory.PROJECT,
+  },
+  {
+    name: ProjectPermission.EXPORT_PROJECT,
+    description: "Export project data",
+    category: PermissionCategory.PROJECT,
+  },
+  {
+    name: ProjectPermission.IMPORT_PROJECT,
+    description: "Import project data",
+    category: PermissionCategory.PROJECT,
+  },
+  {
+    name: ProjectPermission.MANAGE_PROJECT_SETTINGS,
+    description: "Manage project-specific settings",
+    category: PermissionCategory.PROJECT,
+  },
+  {
+    name: ProjectPermission.CLONE_PROJECT,
+    description: "Clone existing projects",
+    category: PermissionCategory.PROJECT,
+  },
+  {
+    name: ProjectPermission.VIEW_PROJECT_ANALYTICS,
+    description: "View project analytics and metrics",
+    category: PermissionCategory.PROJECT,
+  },
+  {
+    name: ProjectPermission.ASSIGN_PROJECT,
+    description: "Assign projects to team members",
+    category: PermissionCategory.PROJECT,
+  },
+  {
+    name: ProjectPermission.MANAGE_PROJECT_ROLES,
+    description: "Manage project-specific roles",
+    category: PermissionCategory.PROJECT,
+  },
+  {
+    name: ProjectPermission.MANAGE_PROJECT_TEMPLATES,
+    description: "Create and manage project templates",
+    category: PermissionCategory.PROJECT,
+  },
+  {
+    name: ProjectPermission.VIEW_PROJECT_HISTORY,
+    description: "View project history and changes",
     category: PermissionCategory.PROJECT,
   },
 
@@ -167,6 +315,56 @@ export const PERMISSION_DEFINITIONS = [
   {
     name: TaskPermission.EDIT_TASK_PRIORITY,
     description: "Change task priority",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.MANAGE_TASK_DEPENDENCIES,
+    description: "Manage task dependencies and relationships",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.ATTACH_TASK_FILES,
+    description: "Attach files to tasks",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.EDIT_TASK_ASSIGNMENTS,
+    description: "Edit task assignments and assignees",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.VIEW_TASK_HISTORY,
+    description: "View task change history",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.EXPORT_TASKS,
+    description: "Export task data",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.BULK_EDIT_TASKS,
+    description: "Edit multiple tasks at once",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.DELETE_TASK_ATTACHMENTS,
+    description: "Delete task attachments",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.MANAGE_TASK_TEMPLATES,
+    description: "Create and manage task templates",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.VIEW_TASK_ANALYTICS,
+    description: "View task analytics and metrics",
+    category: PermissionCategory.TASK,
+  },
+  {
+    name: TaskPermission.MANAGE_TASK_CUSTOM_FIELDS,
+    description: "Manage custom fields for tasks",
     category: PermissionCategory.TASK,
   },
 ];

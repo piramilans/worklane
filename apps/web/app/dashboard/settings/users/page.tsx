@@ -224,12 +224,12 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="px-4 lg:px-6 space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+    <div className="px-2 sm:px-4 lg:px-6 space-y-4 sm:space-y-8">
+      <div className="text-center px-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
           User Management
         </h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-sm sm:text-base lg:text-lg text-gray-600">
           Manage users, roles, and permissions in {currentOrg.name}
         </p>
       </div>
@@ -237,19 +237,21 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
       {/* Filters and Actions */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>Users</CardTitle>
               <CardDescription>
                 {total} user{total !== 1 ? "s" : ""} found
               </CardDescription>
             </div>
-            <AddUserDialog organizationId={currentOrgId} roles={roles} />
+            <div className="w-full sm:w-auto">
+              <AddUserDialog organizationId={currentOrgId} roles={roles} />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1">
+          <div className="flex flex-col gap-4 mb-6 sm:flex-row">
+            <div className="flex-1 w-full sm:w-auto">
               <Label htmlFor="search">Search</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -261,7 +263,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 />
               </div>
             </div>
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <Label htmlFor="role">Filter by Role</Label>
               <Select defaultValue={roleFilter || "all"}>
                 <SelectTrigger>
@@ -279,8 +281,68 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             </div>
           </div>
 
-          {/* Users Table */}
-          <div className="border rounded-lg">
+          {/* Mobile Card View */}
+          <div className="block md:hidden space-y-3">
+            {formattedUsers.map((user) => (
+              <Card key={user.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+                        {user.image ? (
+                          <img
+                            src={user.image}
+                            alt={user.name || "User"}
+                            className="h-10 w-10 rounded-full"
+                          />
+                        ) : (
+                          <span className="text-sm font-medium text-gray-600">
+                            {(user.name || user.email).charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">
+                          {user.name || "No Name"}
+                        </div>
+                        <div className="text-sm text-gray-500 truncate">
+                          {user.email}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {user.role.name}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {new Date(user.joinedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <EditUserDialog
+                        user={user}
+                        organizationId={currentOrgId}
+                        roles={roles}
+                      />
+                      <ResetPasswordDialog
+                        userId={user.id}
+                        userName={user.name || user.email}
+                        organizationId={currentOrgId}
+                      />
+                      <DeleteUserDialog
+                        userId={user.id}
+                        userName={user.name || user.email}
+                        organizationId={currentOrgId}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block border rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

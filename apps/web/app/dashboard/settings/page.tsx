@@ -16,7 +16,14 @@ import {
 } from "@workspace/ui/components/card";
 import { Button } from "@workspace/ui/components/button";
 import { Badge } from "@workspace/ui/components/badge";
-import { Users, Shield, Building, Settings, ArrowRight } from "lucide-react";
+import {
+  Users,
+  Shield,
+  Building,
+  Settings,
+  ArrowRight,
+  Key,
+} from "lucide-react";
 import Link from "next/link";
 
 export default async function SettingsPage() {
@@ -81,17 +88,22 @@ export default async function SettingsPage() {
   ] = await Promise.all([
     hasOrgPermission(session.user.id, currentOrgId, OrgPermission.MANAGE_USERS),
     hasOrgPermission(session.user.id, currentOrgId, OrgPermission.MANAGE_ROLES),
-    hasOrgPermission(session.user.id, currentOrgId, OrgPermission.MANAGE_ORGANIZATION),
+    hasOrgPermission(
+      session.user.id,
+      currentOrgId,
+      OrgPermission.MANAGE_ORGANIZATION
+    ),
   ]);
 
   // Get organization statistics
-  const [memberCount, roleCount] = await Promise.all([
+  const [memberCount, roleCount, permissionCount] = await Promise.all([
     prisma.organizationMember.count({
       where: { organizationId: currentOrgId },
     }),
     prisma.role.count({
       where: { organizationId: currentOrgId },
     }),
+    prisma.permission.count(),
   ]);
 
   const settingsSections = [
@@ -114,6 +126,15 @@ export default async function SettingsPage() {
       color: "bg-green-500",
     },
     {
+      title: "Permissions",
+      description: "View all available permissions",
+      icon: Key,
+      href: "/dashboard/settings/permissions",
+      permission: hasManageRolesPermission, // Same permission as roles
+      stats: `${permissionCount} permissions`,
+      color: "bg-orange-500",
+    },
+    {
       title: "Organization",
       description: "Manage organization settings and details",
       icon: Building,
@@ -129,10 +150,12 @@ export default async function SettingsPage() {
   );
 
   return (
-    <div className="px-4 lg:px-6 space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-lg text-gray-600">
+    <div className="px-2 sm:px-4 lg:px-6 space-y-4 sm:space-y-8">
+      <div className="text-center px-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+          Settings
+        </h1>
+        <p className="text-sm sm:text-base lg:text-lg text-gray-600">
           Manage your organization settings and configuration
         </p>
       </div>

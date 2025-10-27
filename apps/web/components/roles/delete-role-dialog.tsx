@@ -45,6 +45,8 @@ export function DeleteRoleDialog({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const hasMembers = role.memberCount > 0;
+
   const handleDelete = async () => {
     setLoading(true);
 
@@ -62,6 +64,14 @@ export function DeleteRoleDialog({
       const data = await response.json();
 
       if (!response.ok) {
+        // If role has members, show the server message
+        if (data.message?.includes("member")) {
+          toast.error("Cannot delete role", {
+            description: data.message,
+          });
+          setOpen(false);
+          return;
+        }
         throw new Error(data.message || "Failed to delete role");
       }
 
@@ -93,30 +103,53 @@ export function DeleteRoleDialog({
         <DialogHeader>
           <DialogTitle>Delete Role</DialogTitle>
           <DialogDescription>
-            Delete the role <strong>{role.name}</strong>. This action cannot be
-            undone.
+            {hasMembers
+              ? "Cannot delete role with assigned members"
+              : `Delete the role ${role.name}. This action cannot be undone.`}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div
+            className={`border rounded-lg p-4 ${
+              hasMembers
+                ? "bg-red-50 border-red-200"
+                : "bg-yellow-50 border-yellow-200"
+            }`}
+          >
             <div className="flex">
               <div className="flex-shrink-0">
-                <Trash2 className="h-5 w-5 text-red-400" />
+                <Trash2
+                  className={`h-5 w-5 ${hasMembers ? "text-red-400" : "text-yellow-400"}`}
+                />
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  Delete Role Warning
+                <h3
+                  className={`text-sm font-medium ${
+                    hasMembers ? "text-red-800" : "text-yellow-800"
+                  }`}
+                >
+                  {hasMembers ? "Cannot Delete Role" : "Delete Role Warning"}
                 </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>
+                <div
+                  className={`mt-2 text-sm ${
+                    hasMembers ? "text-red-700" : "text-yellow-700"
+                  }`}
+                >
+                  {hasMembers ? (
+                    <p>
                       This role has {role.memberCount} member
-                      {role.memberCount !== 1 ? "s" : ""}
-                    </li>
-                    <li>All members will lose their role assignment</li>
-                    <li>All project-specific permissions will be removed</li>
-                    <li>This action cannot be undone</li>
-                  </ul>
+                      {role.memberCount !== 1 ? "s" : ""} assigned.
+                      <br />
+                      Please reassign or remove all members before deleting this
+                      role.
+                    </p>
+                  ) : (
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>This role has no members assigned</li>
+                      <li>All permissions will be removed</li>
+                      <li>This action cannot be undone</li>
+                    </ul>
+                  )}
                 </div>
               </div>
             </div>
@@ -129,16 +162,18 @@ export function DeleteRoleDialog({
             onClick={() => setOpen(false)}
             disabled={loading}
           >
-            Cancel
+            {hasMembers ? "Close" : "Cancel"}
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={loading}
-          >
-            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Delete Role
-          </Button>
+          {!hasMembers && (
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={loading}
+            >
+              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Delete Role
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
